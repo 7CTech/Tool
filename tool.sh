@@ -153,7 +153,7 @@ if [ $# -eq 1 ]; then
     echo "#                                     Misc                                     #"
     echo "################################################################################"
     echo ""
-    echo "'depends': Check if all dependencies are installed"
+    echo "'depends': Check if the necessary dependencies are installed"
     echo "'help': Show this message"
     echo "'version': Output version information"
     echo ""
@@ -195,6 +195,8 @@ if [ $# -eq 1 ]; then
     echo "################################################################################"
     echo ""
     echo "Generation is automatically done when building"
+    echo "Add takes multiple files"
+    echo "Commit takes a message in double quotes"
     echo ""
     echo ""
     exit 0
