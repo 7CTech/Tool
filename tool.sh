@@ -3,7 +3,7 @@
 ##################################################
 #                    Variables                   #
 ##################################################
-version="0.0.2"
+version="0.0.1"
 hasDepends=true
 gitPath=$(which git 2>&1)
 cmakePath=$(which cmake 2>&1)
