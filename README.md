@@ -6,7 +6,7 @@ tool.sh is a simple tool for managing C/C++ projects that use Git. It was design
 
 ## Dependencies
 
-There are a few dependencies for this script, as they are used in some of it's functions. There is not dependency checking in the script, the tool will simply crash. 
+There are a few dependencies for this script, as they are used in some of it's functions. There is no dependency checking in the script, the tool will simply crash. 
 
 The dependencies are:
 
@@ -16,7 +16,7 @@ The dependencies are:
 
 
 
-## Install
+## Installation
 
 1. [Download this repository](https://github.com/7CTech/Tool/archive/master.zip)
 2. Extract the zip file somewhere
@@ -59,7 +59,5 @@ The dependencies are:
 - Generation is automatically done when building
 - Add takes multiple files
 - Commit takes a message in double quotes
-
-
 
 If you have found an issue or want another feature, please [add an issue](https://github.com/7CTech/Tool/issues/new)
