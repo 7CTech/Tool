@@ -3,7 +3,7 @@
 ##################################################
 #                    Variables                   #
 ##################################################
-version="0.0.2"
+version="0.0.1"
 hasDepends=true
 gitPath=$(which git 2>&1)
 cmakePath=$(which cmake 2>&1)
@@ -123,7 +123,7 @@ if [ $# -eq 1 ]; then
     exit 0
   fi
   if [ $1 = "cab" ]; then
-    cleanandbuild
+    cleanAndBuild
     exit 0
   fi
   if [ $1 = "depends" ]; then
