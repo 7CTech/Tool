@@ -50,7 +50,7 @@ function dependCheck() {
 function generate() {
   mkdir -p "$cmakebuilddir"
   cd "$cmakebuilddir"
-  $cmakePath -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DNPM_ENABLE=ON -G Ninja ../
+  $cmakePath -G Ninja ../
 }
 
 function build() {
