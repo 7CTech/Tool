@@ -58,6 +58,18 @@ function build() {
   $ninjaPath -j$cpucores
 }
 
+function generateRelease() {
+  mkdir -p "$cmakeBuildDir"
+  cd "$cmakeBuildDir"
+  $cmakePath -DCMAKE_BUILD_TYPE=Release -G Ninja ../
+}
+
+function generateDebug() {
+  mkdir -p "$cmakeBuildDir"
+  cd "$cmakeBuildDir"
+  $cmakePath -DCMAKE_BUILD_TYPE=Debug -G Ninja ../
+}
+
 function clean() {
   rm -rf "$cmakebuilddir"
 }
