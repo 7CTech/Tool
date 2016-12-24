@@ -3,7 +3,7 @@
 ##################################################
 #                    Variables                   #
 ##################################################
-version="0.0.3"
+version="0.0.4"
 hasDepends=true
 gitPath=$(which git 2>&1)
 cmakePath=$(which cmake 2>&1)
@@ -60,7 +60,6 @@ function build() {
 
 function clean() {
   rm -rf "$cmakebuilddir"
-  #rm -rf main.c
 }
 
 function gitAdd() {
@@ -92,6 +91,22 @@ function gitCommitAndPush() {
   gitPush
 }
 
+function debug() {
+  echo "Cleaning"
+  clean
+  echo "Creating directories"
+  mkdir -p ./debug/sources
+  echo "Generating"
+  generateDebug
+  echo "Building"
+  build
+  echo "Copying Binaries"
+  cd $cmakeBuildDir
+  find ./ -maxdepth 1 -perm /a+x -type f -exec cp {} $rootDir/debug/ \;
+  cd $rootDir
+  echo "Copying Sources"
+  cp *.c *.h $rootDir/debug/sources
+
 
 ##################################################
 #                    Arguments                   #
@@ -120,6 +135,10 @@ if [ $# -eq 1 ]; then
   if [ $1 = "clean" ]; then
     echo "Cleaning..."
     clean
+    exit 0
+  fi
+  if [ $1 = "debug" ]; then
+    debug
     exit 0
   fi
   if [ $1 = "cab" ]; then
@@ -171,6 +190,7 @@ if [ $# -eq 1 ]; then
     echo "################################################################################"
     echo ""
     echo "'clean': Clean"
+    echo "'debug': Generate debugging files"
     echo ""
     echo ""
     echo "################################################################################"
