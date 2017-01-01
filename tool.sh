@@ -117,7 +117,7 @@ function debug() {
   find ./ -maxdepth 1 -perm /a+x -type f -exec cp {} $rootDir/debug/ \;
   cd $rootDir
   echo "Copying Sources"
-  cp *.c *.h $rootDir/debug/sources
+  cp *.c *.h *.cpp *.cxx *.hpp ./debug/sources
 
 
 ##################################################
