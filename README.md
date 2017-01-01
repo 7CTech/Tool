@@ -6,7 +6,7 @@ tool.sh is a simple tool for managing C/C++ projects that use Git. It was design
 
 ## Dependencies
 
-There are a few dependencies for this script, as they are used in some of it's functions. There is no dependency checking in the script, the tool will simply crash. 
+There are a few dependencies for this script, as they are used in some of it's functions. The script will check for dependencies at the start of most functions.
 
 The dependencies are:
 
