@@ -3,19 +3,45 @@
 ##################################################
 #                    Variables                   #
 ##################################################
-version="0.0.4"
+version="0.0.5"
 hasDepends=true
 gitPath=$(which git 2>&1)
 cmakePath=$(which cmake 2>&1)
 ninjaPath=$(which ninja 2>&1)
 distro=$(sed -n 3p /etc/os-release | sed 's/^...//')
-cmakebuilddir=$(pwd)"/build-cmake-$distro"
-cpucores=$(grep -c ^processor /proc/cpuinfo)
+cmakeBuildDir=$(pwd)"/build-cmake-$distro"
+cpuCores=$(grep -c ^processor /proc/cpuinfo)
+rootDir=$(pwd)
 
 
 ##################################################
 #                    Functions                   #
-##################################################
+##################################################\
+function dependencies() {
+  which git &>/dev/null
+  hasGit=$?
+
+  which cmake &>/dev/null
+  hasCMake=$?
+
+  which ninja &>/dev/null
+  hasNinja=$?
+
+  if [ $hasGit -ne 0 ]; then
+    hasDepends=false
+  fi
+  if [ $hasCMake -ne 0 ]; then
+    hasDepends=false
+  fi
+  if [ $hasNinja -ne 0 ]; then
+    hasDepends=false
+  fi
+
+  if [ $hasDepends != true ]; then
+    echo "Missing dependencies..."
+    exit 1
+  fi
+}
 function dependCheck() {
   which git &>/dev/null
   hasGit=$?
@@ -48,41 +74,49 @@ function dependCheck() {
 }
 
 function generate() {
-  mkdir -p "$cmakebuilddir"
-  cd "$cmakebuilddir"
+  dependencies
+  mkdir -p "$cmakeBuildDir"
+  cd "$cmakeBuildDir" || exit 1
   $cmakePath -G Ninja ../
 }
 
 function build() {
-  cd "$cmakebuilddir"
-  $ninjaPath -j$cpucores
+  dependencies
+  cd "$cmakeBuildDir" || exit 1
+  $ninjaPath -j$cpuCores
 }
 
 function generateRelease() {
+  dependencies
   mkdir -p "$cmakeBuildDir"
-  cd "$cmakeBuildDir"
+  cd "$cmakeBuildDir" || exit 1
   $cmakePath -DCMAKE_BUILD_TYPE=Release -G Ninja ../
 }
 
 function generateDebug() {
+  dependencies
   mkdir -p "$cmakeBuildDir"
-  cd "$cmakeBuildDir"
+  cd "$cmakeBuildDir" || exit 1
   $cmakePath -DCMAKE_BUILD_TYPE=Debug -G Ninja ../
 }
 
 function clean() {
-  rm -rf "$cmakebuilddir"
+  rm -rf "$cmakeBuildDir"
+  rm -rf "$rootDir/debug"
 }
 
 function gitAdd() {
+  dependencies
   $gitPath add $1
 }
 
 function gitCommit() {
+  dependencies
   $gitPath commit -am "$@"
 }
 
 function gitPush() {
+  dependencies
   $gitPath push
 }
 
@@ -113,11 +147,12 @@ function debug() {
   echo "Building"
   build
   echo "Copying Binaries"
-  cd $cmakeBuildDir
+  cd $cmakeBuildDir || exit 1
   find ./ -maxdepth 1 -perm /a+x -type f -exec cp {} $rootDir/debug/ \;
-  cd $rootDir
+  cd $rootDir || exit 1
   echo "Copying Sources"
-  cp *.c *.h *.cpp *.cxx *.hpp ./debug/sources
+  cp *.c *.h $rootDir/debug/sources
+}
 
 
 ##################################################
