@@ -43,6 +43,7 @@ The dependencies are:
 ### Maintenance
 
 - 'clean': Clean
+- 'debug': Generate debugging files and directories (debug & debug/sources)
 
 ### Git
 
