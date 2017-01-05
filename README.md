@@ -31,35 +31,31 @@ The dependencies are:
 
 ### Miscellaneous
 
-- 'depends': Check if the necessary dependencies are installed
-- 'help': Display usage information
+- 'depends': Check if necessary tool.sh and project dependencies are installed
+- 'help': Show this message
 - 'version': Output version information
 
 ### Building
 
-- 'build': Build
-- 'gen': Generate
+- 'build': Build project using ninja (Generation is done automatically)
+- 'gen': Generate CMake build files
+- 'release': Build release binaries (Generation is done automatically)
 
 ### Maintenance
 
-- 'clean': Clean
-- 'debug': Generate debugging files and directories (debug & debug/sources)
+- 'clean': Clean CMake files, debugging files, and generated files
+- 'debug': Generate debugging files
 
 ### Git
 
-- 'add': Add the specified files
-- 'commit': Commit tracked files
-- 'push': Push pending commits
+- 'add' \<files>: Track the specified files with git (Takes multiple files)
+- 'commit: "message": commits tracked changed files (Takes a message in double quotes)
+- 'push': Pushes pending commits
 
 ### Joint Commands
 
 - 'cab': Clean and Build
 - 'cap': Commit and Push
 
-### Notes
-
-- Generation is automatically done when building
-- Add takes multiple files
-- Commit takes a message in double quotes
 
 If you have found an issue or want another feature, please [add an issue](https://github.com/7CTech/Tool/issues/new)
