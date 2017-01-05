@@ -57,7 +57,7 @@ function relDepends() {
   fi
 
   if [ $hasDepends != true ]; then
-    echo -e "${BOLDRED}error:${RESET} missing dependencies, please run '$fileName depends' to see which dependencies you are missing"
+    echo -e "${BOLDRED}error:${RESET} missing dependencies, please run ${BOLDWHITE}'./$fileName depends'${RESET} to see which dependencies you are missing"
     exit 1
   fi
 }
@@ -82,7 +82,7 @@ function dependencies() {
   fi
 
   if [ $hasDepends != true ]; then
-    echo -e "${BOLDRED}error:${RESET} missing dependencies, please run '$fileName depends' to show which dependencies you are missing"
+    echo -e "${BOLDRED}error:${RESET} missing dependencies, please run ${BOLDWHITE}'./$fileName depends'${RESET} to show which dependencies you are missing"
     exit 1
   fi
 }
