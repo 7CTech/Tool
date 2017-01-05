@@ -3,20 +3,64 @@
 ##################################################
 #                    Variables                   #
 ##################################################
-version="0.0.5"
+
+RESET="\x1B[0m"
+
+#BLACK="\x1B[30m"
+#RED="\x1B[31m"
+#GREEN="\x1B[32m"
+#YELLLOW="\x1B[33m"
+#BLUE="\x1B[34m"
+#MAGENTA="\x1B[35m"
+#CYAN="\x1B[36m"
+#WHITE="\x1B[37m"
+
+#BOLDBLACK="\033[1m\033[30m"
+BOLDRED="\033[1m\033[31m"
+#BOLDGREEN="\033[1m\033[32m"
+BOLDYELLOW="\033[1m\033[33m"
+#BOLDBLUE="\033[1m\033[34m"
+#BOLDMAGENTA="\033[1m\033[35m"
+#BOLDCYAN="\033[1m\033[36m"
+BOLDWHITE="\033[1m\033[37m"
+
+. /etc/os-release
+
+version="v0.0.6"
 hasDepends=true
+projectDepends=0
 gitPath=$(which git 2>&1)
 cmakePath=$(which cmake 2>&1)
 ninjaPath=$(which ninja 2>&1)
-distro=$(sed -n 3p /etc/os-release | sed 's/^...//')
+distro=$ID
 cmakeBuildDir=$(pwd)"/build-cmake-$distro"
 cpuCores=$(grep -c ^processor /proc/cpuinfo)
 rootDir=$(pwd)
+fileName=`basename "$0"`
 
 
 ##################################################
 #                    Functions                   #
-##################################################\
+##################################################
+function relDepends() {
+  which cmake &>/dev/null
+  hasCMake=$?
+
+  which ninja &>/dev/null
+  hasNinja=$?
+
+  if [ $hasCMake -ne 0 ]; then
+    hasDepends=false
+  fi
+  if [ $hasNinja -ne 0 ]; then
+    hasDepends=false
+  fi
+
+  if [ $hasDepends != true ]; then
+    echo -e "${BOLDRED}error:${RESET} missing dependencies, please run '$fileName depends' to see which dependencies you are missing"
+    exit 1
+  fi
+}
 function dependencies() {
   which git &>/dev/null
   hasGit=$?
@@ -38,7 +82,7 @@ function dependencies() {
   fi
 
   if [ $hasDepends != true ]; then
-    echo "Missing dependencies..."
+    echo -e "${BOLDRED}error:${RESET} missing dependencies, please run '$fileName depends' to show which dependencies you are missing"
     exit 1
   fi
 }
@@ -53,31 +97,44 @@ function dependCheck() {
   hasNinja=$?
 
   if [ $hasGit -ne 0 ]; then
-    echo "Missing Git"
+    echo -e "${BOLDRED}error:${RESET} missing Git"
     hasDepends=false
   else
-    echo "Path to Git: $gitPath"
+    echo -e "Path to Git: ${BOLDWHITE}$gitPath${RESET}"
   fi
   if [ $hasCMake -ne 0 ]; then
-    echo "Missing CMake"
+    echo -e "${BOLDRED}error:${RESET} missing CMake"
     hasDepends=false
   else
-    echo "Path to CMake: $cmakePath"
+    echo -e "Path to CMake: ${BOLDWHITE}$cmakePath${RESET}"
   fi
   if [ $hasNinja -ne 0 ]; then
-    echo "Missing Ninja"
+    echo -e "${BOLDRED}error:${RESET} missing Ninja"
     hasDepends=false
   else
-    echo "Path to Ninja: $ninjaPath"
+    echo -e "Path to Ninja: ${BOLDWHITE}$ninjaPath${RESET}"
   fi
-
 }
-
+function projectDepends() {
+  true
+  #Insert checks like the above for your project here
+  #Python Example:
+  #
+  #pythonPath=$(which python 2>&1)
+  #hasPython=$?
+  #
+  #if [ $hasPython -ne 0 ]; then
+  #  echo -e "${BOLDYELLOW}warning:${RESET} missing ${BOLDWHITE}Python${RESET}, this should be non-fatal"
+  #  projectDepends=1 #1 = error, 2 = warning
+  #else
+  #  echo -e "Path to Python: ${BOLDWHITE}$pythonPath${RESET}"
+  #fi
+}
 function generate() {
   dependencies
   mkdir -p "$cmakeBuildDir"
   cd "$cmakeBuildDir" || exit 1
-  $cmakePath -G Ninja ../
+  $cmakePath -DCMAKE_BUILD_TYPE=Debug -G Ninja ../ #Insert your options
 }
 
 function build() {
@@ -86,18 +143,21 @@ function build() {
   $ninjaPath -j$cpuCores
 }
 
-function generateRelease() {
-  dependencies
-  mkdir -p "$cmakeBuildDir"
-  cd "$cmakeBuildDir" || exit 1
-  $cmakePath -DCMAKE_BUILD_TYPE=Release -G Ninja ../
+function release() {
+    clean
+    relDepends
+    projectDepends
+    mkdir -p "$cmakeBuildDir"
+    cd $"cmakeBuildDir" || exit 1
+    $cmakePath -DCMAKE_BUILD_TYPE=Release -G Ninja ../ #Insert your options
+    $ninjaPath -j$cpuCores
 }
 
 function generateDebug() {
   dependencies
   mkdir -p "$cmakeBuildDir"
   cd "$cmakeBuildDir" || exit 1
-  $cmakePath -DCMAKE_BUILD_TYPE=Debug -G Ninja ../
+  $cmakePath -DCMAKE_BUILD_TYPE=Debug -G Ninja ../ #Insert your options
 }
 
 function clean() {
@@ -121,19 +181,19 @@ function gitPush() {
 }
 
 function cleanAndBuild() {
-  echo "Cleaning..."
+  echo "Cleaning"
   clean
-  echo "Generating..."
+  echo "Generating"
   generate
-  echo "Building..."
+  echo "Building"
   build
   exit 0
 }
 
 function gitCommitAndPush() {
-  echo "Committing..."
+  echo "Committing with message: \"$*\""
   gitCommit "$@"
-  echo "Pushing..."
+  echo "Pushing"
   gitPush
 }
 
@@ -159,28 +219,30 @@ function debug() {
 #                    Arguments                   #
 ##################################################
 if [ $# -le 0 ]; then
-  echo "No arguments"
-  echo ""
-  echo "Use 'help' to list available arguments"
-  echo "Exiting..."
+  echo -e "${BOLDRED}error:${RESET} no arguments, use ${BOLDWHITE}'help'${RESET} to list available arguments"
   exit 1
 fi
 
 if [ $# -eq 1 ]; then
-  if [ $1 = "gen" ]; then
-    echo 'Generating...'
+  if [ $1 = "gen" ] || [ $1 = "generate" ]; then
+    echo -e "Generating"
     generate
     exit 0
   fi
   if [ $1 = "build" ]; then
-    echo 'Generating...'
+    echo -e "Generating"
     generate
-    echo 'Building...'
+    echo -e "Building"
     build
     exit 0
   fi
+  if [ $1 = "buildRelease" ]; then
+    echo "Building Release"
+    release
+    exit 0
+  fi
   if [ $1 = "clean" ]; then
-    echo "Cleaning..."
+    echo -e "Cleaning"
     clean
     exit 0
   fi
@@ -192,99 +254,75 @@ if [ $# -eq 1 ]; then
     cleanAndBuild
     exit 0
   fi
-  if [ $1 = "depends" ]; then
-    echo "Checking Dependencies..."
+  if [ $1 = "depends" ] || [ $1 = "dependencies" ]; then
+    echo -e "Checking ${BOLDWHITE}tool.sh${RESET} dependencies"
     dependCheck
     if [ $hasDepends = true ]; then
-      echo "All dependencies installed"
-      exit 0
-    else
-      echo "Some dependencies are missing."
-      echo "See above about which"
+      echo -e "All ${BOLDWHITE}tool.sh${RESET} dependencies installed \n"
+    fi
+    echo "Checking project dependencies"
+    projectDepends
+    if [ $projectDepends = 0 ]; then
+      echo -e "All project dependencies installed"
+    elif [ $projectDepends = 2 ]; then
+      echo -e "${BOLDYELLOW}warning:${RESET} missing some non-essential project dependencies, this should be non-fatal"
+    elif [ $projectDepends = 1 ]; then
+      echo -e "${BOLDRED}error:${RESET} missing some project dependencies. see above about which"
       exit 1
     fi
+    if [ $hasDepends = false ]; then
+      echo ""
+      echo -e "Missing some ${BOLDWHITE}tool.sh${RESET} dependencies. Please see above about which"
+      exit 1
+    fi
+    exit 0
   fi
   if [ $1 = "push" ]; then
-    echo "Pushing..."
+    echo -e "Pushing"
     gitPush
     exit 0
   fi
   if [ $1 = "help" ]; then
-    echo "################################################################################"
-    echo "#                                    Usage:                                    #"
-    echo "################################################################################"
+    echo -e "${BOLDWHITE}Usage:${RESET}"
+    echo
+    echo "Miscellaneous:"
+    echo -e "${BOLDWHITE}'depends'${RESET}: Check if necessary tool.sh and project dependencies are installed"
+    echo -e "${BOLDWHITE}'help'${RESET}: Show this message"
+    echo -e "${BOLDWHITE}'version'${RESET}: Output version information"
+    echo
+    echo "Building:"
+    echo -e "${BOLDWHITE}'build'${RESET}: Build project using ninja (Generation is done automatically)"
+    echo -e "${BOLDWHITE}'gen'${RESET}: Generate CMake build files"
+    echo -e "${BOLDWHITE}'release'${RESET}: Build release binaries (Generation is done automatically)"
     echo ""
+    echo "Maintenance:"
+    echo -e "${BOLDWHITE}'clean'${RESET}: Clean CMake files, debugging files, and generated files"
+    echo -e "${BOLDWHITE}'debug'${RESET}: Generate debugging files"
     echo ""
-    echo "################################################################################"
-    echo "#                                     Misc                                     #"
-    echo "################################################################################"
+    echo "Git:"
+    echo -e "${BOLDWHITE}'add'${RESET} <files>: Track the specified files with git (Takes multiple files)"
+    echo -e "${BOLDWHITE}'commit'${RESET} \"message\": commits tracked changed files (Takes a message in double quotes)"
+    echo -e "${BOLDWHITE}'push'${RESET}: Pushes pending commits"
     echo ""
-    echo "'depends': Check if the necessary dependencies are installed"
-    echo "'help': Show this message"
-    echo "'version': Output version information"
-    echo ""
-    echo ""
-    echo "################################################################################"
-    echo "#                                   Building                                   #"
-    echo "################################################################################"
-    echo ""
-    echo "'build': Build"
-    echo "'gen': Generate"
-    echo ""
-    echo ""
-    echo "################################################################################"
-    echo "#                                  Maintenance                                 #"
-    echo "################################################################################"
-    echo ""
-    echo "'clean': Clean"
-    echo "'debug': Generate debugging files"
-    echo ""
-    echo ""
-    echo "################################################################################"
-    echo "#                                      Git                                     #"
-    echo "################################################################################"
-    echo ""
-    echo "'add': Add the specified files"
-    echo "'commit': Commit tracked files"
-    echo "'push': Push pending commits"
-    echo ""
-    echo ""
-    echo "################################################################################"
-    echo "#                                Joint Commands                                #"
-    echo "################################################################################"
-    echo ""
-    echo "'cab': Clean and Build"
-    echo "'cap': Commit and Push"
-    echo ""
-    echo ""
-    echo "################################################################################"
-    echo "#                                     Notes                                    #"
-    echo "################################################################################"
-    echo ""
-    echo "Generation is automatically done when building"
-    echo "Add takes multiple files"
-    echo "Commit takes a message in double quotes"
-    echo ""
-    echo ""
+    echo "Joint Commands:"
+    echo -e "${BOLDWHITE}'cab'${RESET}: Clean and build"
+    echo -e "${BOLDWHITE}'cap'${RESET}: Commit and push"
     exit 0
   fi
   if [ $1 = "version" ]; then
-    echo "tool.sh version $version"
+    echo -e "${BOLDWHITE}tool.sh${RESET} version ${BOLDWHITE}$version${RESET}"
+    echo -e "Latest local modification: ${BOLDWHITE}$(stat -c %y "$rootDir/$fileName")${RESET}"
+    echo -e "Latest git version: ${BOLDWHITE}$(git ls-remote --tags git://github.com/7CTech/Tool.git | tail -n 1 | sed 's/^.\{51\}//')$RESET"
+    echo -e "Latest git commit: ${BOLDWHITE}$(git ls-remote https://github.com/7CTech/Tool | sed -n 1p | sed 's/.\{5\}$//')${RESET}"
     exit 0
   fi
-  echo "Unknown argument $1"
-  echo ""
-  echo "Use 'help' to list available arguments"
-  echo "Exiting..."
+  echo -e "${BOLDRED}error:${RESET} unknown argument ${BOLDWHITE}$1${RESET}, use ${BOLDWHITE}'help'${RESET} to list available arguments"
   exit 1
 fi
 
 if [ $# -eq 2 ]; then
   if [ $1 = "commit" ]; then
-    echo "Committing..."
-    1=""
-    2=""
-    echo "$@"
+    echo -e "Committing with message: \"${*:2}\""
     gitCommit "${@:2}"
     exit 0
   fi
@@ -293,27 +331,19 @@ if [ $# -eq 2 ]; then
     exit 0
   fi
   if [ $1 != "add" ]; then
-    echo "Unknown argument $1, $2"
-    echo ""
-    echo "Use 'help' to list available arguments"
-    echo "Exiting..."
+    echo -e "${BOLDRED}error:${RESET} unknown arguments ${BOLDWHITE}$1${RESET}, ${BOLDWHITE}$2${RESET}, use ${BOLDWHITE}'help'${BOLDWHITE} to list available arguments"
     exit 1
   fi
 fi
 
 if [ $# -ge 2 ]; then
   if [ $1 = "add" ]; then
-    echo "Adding Specified Files..."
-    echo ""
     for (( i=2; i<=$#; i++ )); do
-      echo "Adding ${!i}..."
+      echo -e "Adding ${BOLDWHITE}${!i}${RESET}"
       gitAdd ${!i}
     done
     exit 0
   fi
-  echo "Unknown arguments"
-  echo ""
-  echo "Use 'help' to list available arguments"
-  echo "Exiting..."
+  echo -e "${BOLDRED}error:${RESET} unknown arguments, use ${BOLDWHITE}'help'${RESET} to list available arguments"
   exit 1
 fi
