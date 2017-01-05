@@ -23,7 +23,7 @@ The dependencies are:
 3. Copy the file tool.sh into the root directory of your project
 4. Give the tool executable permissions (`chmod +x tool.sh`)
 5. Check if you have the necessary dependencies installed (`./tool.sh depends`)
-6. (Optional) Customise the Generation and Build functions to suit your project (Eg. Change compiler, CMake options, etc.)
+6. (Optional) Customise the Generation and Build functions to suit your project (Eg. Change compiler, CMake options, Check for necessary project dependencies, etc.)
 
 
 
