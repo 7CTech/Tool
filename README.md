@@ -58,4 +58,4 @@ The dependencies are:
 - 'cap': Commit and Push
 
 
-If you have found an issue or want another feature, please [add an issue](https://github.com/7CTech/Tool/issues/new)
+If you have found an issue or would like to request a new feature, please [add an issue](https://github.com/7CTech/Tool/issues/new)
