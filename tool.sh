@@ -26,7 +26,7 @@ BOLDWHITE="\033[1m\033[37m"
 
 . /etc/os-release
 
-version="v0.0.7"
+version="v0.0.6-2"
 hasDepends=true
 projectDepends=0
 gitPath=$(which git 2>&1)
