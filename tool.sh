@@ -26,7 +26,7 @@ BOLDWHITE="\033[1m\033[37m"
 
 . /etc/os-release
 
-version="v0.0.6"
+version="v0.0.7"
 hasDepends=true
 projectDepends=0
 gitPath=$(which git 2>&1)
@@ -312,7 +312,7 @@ if [ $# -eq 1 ]; then
   if [ $1 = "version" ]; then
     echo -e "${BOLDWHITE}tool.sh${RESET} version ${BOLDWHITE}$version${RESET}"
     echo -e "Latest local modification: ${BOLDWHITE}$(stat -c %y "$rootDir/$fileName")${RESET}"
-    echo -e "Latest git version: ${BOLDWHITE}$(git ls-remote --tags git://github.com/7CTech/Tool.git | tail -n 1 | sed 's/^.\{51\}//')$RESET"
+    echo -e "Latest git version: ${BOLDWHITE}$(git ls-remote --tags https://github.com/7CTech/Tool.git | tail -n 1 | sed 's/^.\{51\}//')$RESET"
     echo -e "Latest git commit: ${BOLDWHITE}$(git ls-remote https://github.com/7CTech/Tool | sed -n 1p | sed 's/.\{5\}$//')${RESET}"
     exit 0
   fi
