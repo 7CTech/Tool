@@ -29,6 +29,7 @@ The dependencies are:
 Dependencies - See the examples in tool.sh under the 'dependencies section'. Below is an example for wget
 
 `declare -A wget=([name]="Wget" [path]="$(pathBinary wget)" [has]=$(hasBinary wget))`
+
 `addProjectDependent "${wget[@]}"`
 
 
