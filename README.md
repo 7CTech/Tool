@@ -26,7 +26,8 @@ The dependencies are:
 6. (Optional) Customise the Generation and Build functions to suit your project (Eg. Change compiler, CMake options, Check for necessary project dependencies, etc.)
 
 ## Configuration
-Dependencies - See the examples in tool.sh under the 'dependencies section'. Below is an example for wget
+### Dependencies
+See the examples in tool.sh under the 'dependencies section'. Below is an example for wget
 
 `declare -A wget=([name]="Wget" [path]="$(pathBinary wget)" [has]=$(hasBinary wget))`
 
