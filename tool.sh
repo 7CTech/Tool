@@ -26,22 +26,117 @@ BOLDWHITE="\033[1m\033[37m"
 
 . /etc/os-release
 
-version="v0.0.6-2"
+version="v0.1.0"
 hasDepends=true
 projectDepends=0
 gitPath=$(which git 2>&1)
 cmakePath=$(which cmake 2>&1)
 ninjaPath=$(which ninja 2>&1)
+
 distro=$ID
 cmakeBuildDir=$(pwd)"/build-cmake-$distro"
 cpuCores=$(grep -c ^processor /proc/cpuinfo)
 rootDir=$(pwd)
 fileName=`basename "$0"`
 
+##################################################
+#                 High Functions                 #
+##################################################
+
+function addProjectDependent() {
+    if [ -z $names ]; then
+        names=()
+        names+=("${2}")
+        export names
+    else
+        names+=("${2}")
+    fi
+    if [ -z $paths ]; then
+        paths=()
+        paths+=("${1}")
+        export paths
+    else
+        paths+=("${1}")
+    fi
+    if [ -z $have ]; then
+        have=()
+        have+=("${3}")
+        export have
+    else
+        have+=("${3}")
+    fi
+}
+
+function pathBinary() {
+    local thisPath
+    #echo "$1"
+    thisPath="$(which ${1} 2>&1)"
+    echo "$thisPath"
+}
+
+function hasBinary() {
+    which ${1} &>/dev/null
+    has=$?
+    echo $has
+}
+
+function projectDepends() {
+    for i in $(seq 0 ${numOfDependents}); do
+        if [ ${have[i]} -ne 0 ]; then
+            echo -e "${BOLDYELLOW}warning:${RESET} missing ${BOLDWHITE}${names[i]}${RESET}, this should be non-fatal"
+            projectDepends=2
+        else
+            echo -e "Path to ${names[i]}: ${BOLDWHITE}${paths[i]}${RESET}"
+        fi
+    done
+    echo
+    if [ $projectDepends = 0 ]; then
+      echo -e "All project dependencies installed"
+    elif [ $projectDepends = 2 ]; then
+      echo -e "${BOLDYELLOW}warning:${RESET} missing some non-essential project dependencies, this should be non-fatal"
+    elif [ $projectDepends = 1 ]; then
+      echo -e "${BOLDRED}error:${RESET} missing some project dependencies. see above about which"
+      exit 1
+    fi
+}
+
+
+##################################################
+#                   Dependencies                 #
+##################################################
+
+#declare -A git=([name]="Git" [path]="$(pathBinary git)" [has]=$(hasBinary git))
+#declare -A cmake=([name]="CMake" [path]="$(pathBinary cmake)" [has]=$(hasBinary cmake))
+#declare -A ninja=([name]="Ninja" [path]="$(pathBinary ninja)" [has]=$(hasBinary ninja))
+
+#addDependent "${git[@]}"
+#addDependent "${cmake[@]}"
+#addDependent "${ninja[@]}"
+
+
+#declare -A node=([name]="Node.js" [path]="$(pathBinary node)" [has]=$(hasBinary node))
+#declare -A npm=([name]="npm" [path]="$(pathBinary npm)" [has]=$(hasBinary npm))
+#declare -A ruby=([name]="Ruby" [path]="$(pathBinary ruby)" [has]=$(hasBinary ruby))
+#declare -A gem=([name]="gem" [path]="$(pathBinary gem)" [has]=$(hasBinary gem))
+#declare -A python=([name]="Python" [path]="$(pathBinary python)" [has]=$(hasBinary python))
+#declare -A pip=([name]="pip" [path]="$(pathBinary pip)" [has]=$(hasBinary pip))
+#declare -A wget=([name]="Wget" [path]="$(pathBinary wget)" [has]=$(hasBinary wget))
+
+#addProjectDependent "${node[@]}"
+#addProjectDependent "${npm[@]}"
+#addProjectDependent "${ruby[@]}"
+#addProjectDependent "${gem[@]}"
+#addProjectDependent "${python[@]}"
+#addProjectDependent "${pip[@]}"
+#addProjectDependent "${wget[@]}"
+
+numOfDependents="$(expr ${#names[@]} - 1)"
+
 
 ##################################################
 #                    Functions                   #
 ##################################################
+
 function relDepends() {
   which cmake &>/dev/null
   hasCMake=$?
@@ -61,32 +156,8 @@ function relDepends() {
     exit 1
   fi
 }
-function dependencies() {
-  which git &>/dev/null
-  hasGit=$?
 
-  which cmake &>/dev/null
-  hasCMake=$?
-
-  which ninja &>/dev/null
-  hasNinja=$?
-
-  if [ $hasGit -ne 0 ]; then
-    hasDepends=false
-  fi
-  if [ $hasCMake -ne 0 ]; then
-    hasDepends=false
-  fi
-  if [ $hasNinja -ne 0 ]; then
-    hasDepends=false
-  fi
-
-  if [ $hasDepends != true ]; then
-    echo -e "${BOLDRED}error:${RESET} missing dependencies, please run ${BOLDWHITE}'./$fileName depends'${RESET} to show which dependencies you are missing"
-    exit 1
-  fi
-}
-function dependCheck() {
+function toolDepends() {
   which git &>/dev/null
   hasGit=$?
 
@@ -115,26 +186,12 @@ function dependCheck() {
     echo -e "Path to Ninja: ${BOLDWHITE}$ninjaPath${RESET}"
   fi
 }
-function projectDepends() {
-  true
-  #Insert checks like the above for your project here
-  #Python Example:
-  #
-  #pythonPath=$(which python 2>&1)
-  #hasPython=$?
-  #
-  #if [ $hasPython -ne 0 ]; then
-  #  echo -e "${BOLDYELLOW}warning:${RESET} missing ${BOLDWHITE}Python${RESET}, this should be non-fatal"
-  #  projectDepends=1 #1 = error, 2 = warning
-  #else
-  #  echo -e "Path to Python: ${BOLDWHITE}$pythonPath${RESET}"
-  #fi
-}
+
 function generate() {
   dependencies
   mkdir -p "$cmakeBuildDir"
   cd "$cmakeBuildDir" || exit 1
-  $cmakePath -DCMAKE_BUILD_TYPE=Debug -G Ninja ../ #Insert your options
+  $cmakePath -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DNPM_ENABLE=ON -DWGET_ENABLE=ON -G Ninja ../
 }
 
 function build() {
@@ -148,8 +205,8 @@ function release() {
     relDepends
     projectDepends
     mkdir -p "$cmakeBuildDir"
-    cd $"cmakeBuildDir" || exit 1
-    $cmakePath -DCMAKE_BUILD_TYPE=Release -G Ninja ../ #Insert your options
+    cd "$cmakeBuildDir" || exit 1
+    $cmakePath -DCMAKE_BUILD_TYPE=Release ../
     $ninjaPath -j$cpuCores
 }
 
@@ -157,12 +214,13 @@ function generateDebug() {
   dependencies
   mkdir -p "$cmakeBuildDir"
   cd "$cmakeBuildDir" || exit 1
-  $cmakePath -DCMAKE_BUILD_TYPE=Debug -G Ninja ../ #Insert your options
+  $cmakePath -DCMAKE_BUILD_TYPE=Debug ../
 }
 
 function clean() {
   rm -rf "$cmakeBuildDir"
   rm -rf "$rootDir/debug"
+  rm -rf main.c
 }
 
 function gitAdd() {
@@ -208,10 +266,10 @@ function debug() {
   build
   echo "Copying Binaries"
   cd $cmakeBuildDir || exit 1
-  find ./ -maxdepth 1 -perm /a+x -type f -exec cp {} $rootDir/debug/ \;
+  find ./ -maxdepth 1 -perm /a+x -type f -exec cp {} $rootDir/debug/ \; #I'm assuming you mark your binaries as executable
   cd $rootDir || exit 1
   echo "Copying Sources"
-  cp *.c *.h *.cpp *.cxx *.hpp ./debug/sources
+  cp *.c *.h *.cpp *.cxx *.hpp ./debug/sources #Grab them all
 }
 
 
@@ -236,7 +294,7 @@ if [ $# -eq 1 ]; then
     build
     exit 0
   fi
-  if [ $1 = "buildRelease" ]; then
+  if [ $1 = "release" ]; then
     echo "Building Release"
     release
     exit 0
@@ -255,21 +313,13 @@ if [ $# -eq 1 ]; then
     exit 0
   fi
   if [ $1 = "depends" ] || [ $1 = "dependencies" ]; then
-    echo -e "Checking ${BOLDWHITE}tool.sh${RESET} dependencies"
-    dependCheck
+    echo -e "Checking ${BOLDWHITE}tool.sh${RESET} dependencies..."
+    toolDepends
     if [ $hasDepends = true ]; then
       echo -e "All ${BOLDWHITE}tool.sh${RESET} dependencies installed \n"
     fi
-    echo "Checking project dependencies"
+    echo "Checking project dependencies..."
     projectDepends
-    if [ $projectDepends = 0 ]; then
-      echo -e "All project dependencies installed"
-    elif [ $projectDepends = 2 ]; then
-      echo -e "${BOLDYELLOW}warning:${RESET} missing some non-essential project dependencies, this should be non-fatal"
-    elif [ $projectDepends = 1 ]; then
-      echo -e "${BOLDRED}error:${RESET} missing some project dependencies. see above about which"
-      exit 1
-    fi
     if [ $hasDepends = false ]; then
       echo ""
       echo -e "Missing some ${BOLDWHITE}tool.sh${RESET} dependencies. Please see above about which"
