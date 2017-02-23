@@ -270,6 +270,18 @@ function debug() {
   cd $rootDir || exit 1
   echo "Copying Sources"
   cp *.c *.h *.cpp *.cxx *.hpp ./debug/sources #Grab them all
+  echo "Generating Scripts"
+  if [ "$(hasBinary valgrind)" = 0 ]; then
+      echo "#!/bin/bash" > ./debug/gdb.sh
+      echo "gdb $(find $cmakeBuildDir -maxdepth 1 -perm /a+x -type f) -d ./sources" >> ./debug/gdb.sh
+      chmod +x ./debug/gdb.sh
+  fi
+
+  if [ "$(hasBinary valgrind)" = 0 ]; then
+      echo "#!/bin/bash" > ./debug/valgrind.sh
+      echo "valgrind --leak-check=full $(find $cmakeBuildDir -maxdepth 1 -perm /a+x -type f) \${@:1} 2>&1" >> ./debug/valgrind.sh
+      chmod +x ./debug/valgrind.sh
+  fi
 }
 
 
